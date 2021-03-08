@@ -19,6 +19,9 @@ let package = Package(
         .library(name: "Port", targets: ["Port"]),
         .library(name: "Commitment", targets: ["Commitment"]),
         .library(name: "Host", targets: ["Host"]),
+        .library(name: "LCSoloMachine", targets: ["LCSoloMachine"]),
+        .library(name: "LCTendermint", targets: ["LCTendermint"]),
+        .library(name: "LCLocalhost", targets: ["LCLocalhost"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -34,6 +37,9 @@ let package = Package(
         .target(name: "Port", dependencies: [], path: "./Sources/Core/05-Port"),
         .target(name: "Commitment", dependencies: [], path: "./Sources/Core/23-Commitment"),
         .target(name: "Host", dependencies: [], path: "./Sources/Core/24-Host"),
+        .target(name: "LCSoloMachine", dependencies: [], path: "./Sources/LightClients/06-SoloMachine"),
+        .target(name: "LCTendermint", dependencies: [], path: "./Sources/LightClients/07-Tendermint"),
+        .target(name: "LCLocalhost", dependencies: [], path: "./Sources/LightClients/09-Localhost"),
         .target(
             name: "Transfer",
             dependencies: ["IBCCore"],
