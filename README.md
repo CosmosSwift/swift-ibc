@@ -2,7 +2,22 @@
 
 The start of porting ibc to Swift
 
+Applications:
+[ ]: Transfer
 
+Core:
+[ ]: 02-Client
+[ ]: 03-Connection
+[ ]: 04-Channel
+[ ]: 05-Port
+[ ]: 23-Commitment
+[x]: 24-Host module
+[ ]: Core
+
+Lightclients
+[ ]: 06-SoloMachine
+[ ]: 07-Tendermint
+[ ]: 09-Localhost
 
 # Tools
 

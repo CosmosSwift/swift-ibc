@@ -36,12 +36,12 @@ let package = Package(
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(name: "Cosmos", dependencies: [], path: "./Sources/Cosmos"),
-        .target(name: "IBCCore", dependencies: [], path: "./Sources/Core/Core"),
-        .target(name: "Client", dependencies: [], path: "./Sources/Core/02-Client"),
-        .target(name: "Connection", dependencies: [], path: "./Sources/Core/03-Connection"),
-        .target(name: "Channel", dependencies: [], path: "./Sources/Core/04-Channel"),
-        .target(name: "Port", dependencies: [], path: "./Sources/Core/05-Port"),
-        .target(name: "Commitment", dependencies: [], path: "./Sources/Core/23-Commitment"),
+        .target(name: "IBCCore", dependencies: ["Cosmos"], path: "./Sources/Core/Core"),
+        .target(name: "Client", dependencies: ["Cosmos"], path: "./Sources/Core/02-Client"),
+        .target(name: "Connection", dependencies: ["Cosmos"], path: "./Sources/Core/03-Connection"),
+        .target(name: "Channel", dependencies: ["Cosmos"], path: "./Sources/Core/04-Channel"),
+        .target(name: "Port", dependencies: ["Cosmos"], path: "./Sources/Core/05-Port"),
+        .target(name: "Commitment", dependencies: ["Cosmos"], path: "./Sources/Core/23-Commitment"),
         .target(name: "Host", dependencies:
                     [ "Cosmos",
                     ], path: "./Sources/Core/24-Host"),
