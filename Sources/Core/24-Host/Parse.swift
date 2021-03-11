@@ -1,3 +1,71 @@
+import Cosmos
+
+// ParseIdentifier parses the sequence from the identifier using the provided prefix. This function
+// does not need to be used by counterparty chains. SDK generated connection and channel identifiers
+// are required to use this format.
+func parseIdentifier(_ identifier: String, _ prefix: String) throws -> UInt64 {
+    
+    if !identifier.hasPrefix(prefix) {
+        throw CosmosError.wrap(error: CosmosError.invalidID, description: "identifier must have prefix `\(prefix)`")
+    }
+
+    let uint64Str = identifier.suffix(from: String.Index(utf16Offset: prefix.count, in: identifier))
+    guard let sequence = UInt64(uint64Str) else {
+        throw CosmosError.wrap(error: CosmosError.invalidID, description: "identifier should be in format `\(prefix)${UInt64}`")
+    }
+    return sequence
+}
+
+// ParseConnectionPath returns the connection ID from a full path. It returns
+// an error if the provided path is invalid.
+func parseConnectionPath(_ path: String) throws -> String {
+    #warning("The original go code splits by /, and takes the 2nd instance. so it will be the first item after the first / ")
+    guard let result = path.split(separator: "/").first else {
+        throw CosmosError.wrap(error: CosmosError.invalidPath, description: "cannot parse connection path \(path)")
+    }
+    return String(result)
+            
+    /*
+        split := strings.Split(path, "/")
+        if len(split) != 2 {
+            return "", sdkerrors.Wrapf(ErrInvalidPath, "cannot parse connection path %s", path)
+        }
+
+        return split[1], nil
+   */
+}
+
+// ParseChannelPath returns the port and channel ID from a full path. It returns
+// an error if the provided path is invalid.
+func parseChannelPath(_ path: String) throws -> (String, String) {
+    let split = path.split(separator: "/", omittingEmptySubsequences: false)
+    
+    if split.count < 5 || split[1] != PortKeys.keyPortPrefix || split[3] != PortKeys.keyChannelPrefix {
+        throw CosmosError.wrap(error: CosmosError.invalidPath, description: "cannot parse channel path \(path)")
+    }
+    return (String(split[2]), String(split[4]))
+}
+
+// MustParseConnectionPath returns the connection ID from a full path. Panics
+// if the provided path is invalid.
+func mustParseConnectionPath(_ path: String) -> String {
+    do {
+        return try parseConnectionPath(path)
+    } catch {
+        fatalError(error.localizedDescription)
+    }
+}
+
+// MustParseChannelPath returns the port and channel ID from a full path. Panics
+// if the provided path is invalid.
+func mustParseChannelPath(_ path: String) -> (String, String) {
+    do {
+        return try parseChannelPath(path)
+    } catch {
+        fatalError(error.localizedDescription)
+    }
+}
+
 /*
 package host
 

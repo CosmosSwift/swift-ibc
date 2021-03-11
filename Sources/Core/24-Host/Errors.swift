@@ -1,3 +1,16 @@
+import Cosmos
+
+let SubModuleName = "host"
+
+extension CosmosError {
+    
+    // IBC client sentinel errors
+    static let invalidID = register(codespace: SubModuleName, code: 2, description: "invalid identifier")
+    static let invalidPath = register(codespace: SubModuleName, code: 3, description: "invalid path")
+    static let invalidPacket = register(codespace: SubModuleName, code: 4, description: "invalid packet")
+
+}
+
 /*
 package host
 

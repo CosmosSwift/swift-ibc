@@ -1,3 +1,117 @@
+import Foundation
+import Cosmos
+
+
+// DefaultMaxCharacterLength defines the default maximum character length used
+// in validation of identifiers including the client, connection, port and
+// channel identifiers.
+//
+// NOTE: this restriction is specific to this golang implementation of IBC. If
+// your use case demands a higher limit, please open an issue and we will consider
+// adjusting this restriction.
+fileprivate let defaultMaxCharacterLength = 64
+
+// IsValidID defines regular expression to check if the string consist of
+// characters in one of the following categories only:
+// - Alphanumeric
+// - `.`, `_`, `+`, `-`, `#`
+// - `[`, `]`, `<`, `>`
+
+extension String {
+    var IsValidID: Bool {
+        let charSet = CharacterSet(charactersIn:
+                                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-#[]<>"
+        )
+        if self.rangeOfCharacter(from: charSet.inverted) == nil {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
+
+// ICS 024 Identifier and Path Validation Implementation
+//
+// This file defines ValidateFn to validate identifier and path strings
+// The spec for ICS 024 can be located here:
+// https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements
+
+func defaultIdentifierValidator(_ id: String, _ min: Int, _ max: Int) throws -> Bool {
+    if id.isEmpty {
+        throw CosmosError.wrap(error: CosmosError.invalidID, description: "identifier cannot be blank")
+    }
+    // valid id must fit the length requirements
+    if id.count < min || id.count > max {
+        throw CosmosError.wrap(error: CosmosError.invalidID, description: "identifier \(id) has invalid length: \(id.count), must be between \(min)-\(max) characters")
+    }
+    // valid id must contain only lower alphabetic characters
+    if !id.IsValidID {
+        throw CosmosError.wrap(error: CosmosError.invalidID, description: "identifier \(id) must contain only alphanumeric or the following characters: '.', '_', '+', '-', '#', '[', ']', '<', '>'")
+    }
+    return true
+}
+
+// ClientIdentifierValidator is the default validator function for Client identifiers.
+// A valid Identifier must be between 9-64 characters and only contain alphanumeric and some allowed
+// special characters (see IsValidID).
+func clientIdentifierValidator(_ id: String)  throws -> Bool {
+    try defaultIdentifierValidator(id, 9, defaultMaxCharacterLength)
+}
+
+// ConnectionIdentifierValidator is the default validator function for Connection identifiers.
+// A valid Identifier must be between 10-64 characters and only contain alphanumeric and some allowed
+// special characters (see IsValidID).
+func connectionIdentifierValidator(_ id: String)  throws -> Bool {
+    try defaultIdentifierValidator(id, 10, defaultMaxCharacterLength)
+}
+
+// ChannelIdentifierValidator is the default validator function for Channel identifiers.
+// A valid Identifier must be between 8-64 characters and only contain alphanumeric and some allowed
+// special characters (see IsValidID).
+func channelIdentifierValidator(_ id: String)  throws -> Bool {
+    try defaultIdentifierValidator(id, 8, defaultMaxCharacterLength)
+}
+
+// PortIdentifierValidator is the default validator function for Port identifiers.
+// A valid Identifier must be between 2-64 characters and only contain alphanumeric and some allowed
+// special characters (see IsValidID).
+func portIdentifierValidator(_ id: String)  throws -> Bool {
+    try defaultIdentifierValidator(id, 2, defaultMaxCharacterLength)
+}
+
+// NewPathValidator takes in a Identifier Validator function and returns
+// a Path Validator function which requires path to consist of `/`-separated valid identifiers,
+// where a valid identifier is between 1-64 characters, contains only alphanumeric and some allowed
+// special characters (see IsValidID), and satisfies the custom `idValidator` function.
+func newPathValidator(idValidator: @escaping (String) throws -> Bool) -> (String) throws -> Bool {
+    return { (path: String)  in
+        if path.hasPrefix("/") || path.hasSuffix("/") || path.contains("//") {
+            throw CosmosError.wrap(error: CosmosError.invalidPath, description: "path \(path) should not start or end with '/' or have empty parts")
+        }
+        
+        let pathParts = path.split(separator: "/")
+        
+        for part in pathParts.map ({String($0)}) {
+            if !(try idValidator(part)) {
+                return false
+            }
+            do {
+            if !(try defaultIdentifierValidator(part, 1, defaultMaxCharacterLength)) {
+                return false
+            }
+            } catch {
+                throw CosmosError.wrap(error: error, description: "path \(path) contains an invalid identifier: '\(part)'")
+            }
+        }
+        return true
+    }
+}
+
+
+
+
+
 /*
 package host
 
