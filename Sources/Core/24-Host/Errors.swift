@@ -1,18 +1,11 @@
-/*
-package host
-
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
-
-// SubModuleName defines the ICS 24 host
-const SubModuleName = "host"
+import Cosmos
 
 // IBC client sentinel errors
-var (
-	ErrInvalidID     = sdkerrors.Register(SubModuleName, 2, "invalid identifier")
-	ErrInvalidPath   = sdkerrors.Register(SubModuleName, 3, "invalid path")
-	ErrInvalidPacket = sdkerrors.Register(SubModuleName, 4, "invalid packet")
-)
-
-*/
+extension CosmosError {
+    // SubModuleName defines the ICS 24 host
+    static let hostCodespace = "host"
+    
+    static let invalidId = Self.register(codespace: Self.hostCodespace, code: 2, description: "invalid identifier")
+    static let invalidPath = Self.register(codespace: Self.hostCodespace, code: 3, description: "invalid path")
+    static let invalidPacket = Self.register(codespace: Self.hostCodespace, code: 4, description: "invalid packet")
+}
