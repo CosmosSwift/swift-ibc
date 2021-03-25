@@ -29,7 +29,7 @@ let package = Package(
         .target(
             name: "Transfer",
             dependencies: [
-                "IBCCore",
+                .target(name: "IBCCore"),
                 .product(name: "Cosmos", package: "swift-cosmos"),
                 .product(name: "Params", package: "swift-cosmos"),
                 .product(name: "Auth", package: "swift-cosmos"),
@@ -40,12 +40,12 @@ let package = Package(
         .target(
             name: "IBCCore",
             dependencies: [
-                "Client",
-                "Connection",
-                "Channel",
-                "Port",
-                "Commitment",
-                "Host"
+                .target(name: "Client"),
+                .target(name: "Connection"),
+                .target(name: "Channel"),
+                .target(name: "Port"),
+                .target(name: "Commitment"),
+                .target(name: "Host"),
             ],
             path: "./Sources/Core/Core"
         ),
@@ -63,13 +63,18 @@ let package = Package(
         ),
         .target(
             name: "Channel",
-            dependencies: [],
+            dependencies: [
+                .product(name: "Cosmos", package: "swift-cosmos"),
+                .target(name: "Host"),
+            ],
             path: "./Sources/Core/04-Channel"
         ),
         .target(
             name: "Port",
             dependencies: [
                 .product(name: "Cosmos", package: "swift-cosmos"),
+                .product(name: "Capability", package: "swift-cosmos"),
+                .target(name: "Channel"),
             ],
             path: "./Sources/Core/05-Port"
         ),

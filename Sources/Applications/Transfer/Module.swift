@@ -34,7 +34,10 @@ import JSON
 import ABCIMessages
 import Cosmos
 import CosmosProto
+import Capability
+import Channel
 import Port
+import Host
 
 // AppModuleBasic is the IBC Transfer AppModuleBasic
 public class TransferAppModuleBasic: AppModuleBasic {
@@ -191,124 +194,121 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 	func validateTransferChannelParams(
 		request: Request,
 		keeper: TransferKeeper,
-		order: CosmosProto.Ibc_Core_Channel_V1_Order,
+		order: Order,
 		portId: String,
 		channelId: String,
 		version: String
 	) throws {
-        // TODO: Implement
-        fatalError()
-//		// NOTE: for escrow address security only 2^32 channels are allowed to be created
-//		// Issue: https://github.com/cosmos/cosmos-sdk/issues/7737
-//		let channelSequence = try parseChannelSequence(channelId)
-//
-//		guard channelSequence <= UInt32.max else {
-//            throw CosmosError.wrap(
-//                error: CosmosError.maxTransferChannels,
-//                description: "channel sequence \(channelSequence) is greater than max allowed transfer channels \(UInt32.max)"
-//            )
-//		}
-//
-//		guard order == .unordered else {
-//            throw CosmosError.wrap(
-//                error: CosmosError.invalidChannelOrdering,
-//                description: "expected \(CosmosProto.Ibc_Core_Channel_V1_Order.unordered) channel, got \(order) "
-//            )
-//		}
-//
-//		// Require portID is the portID transfer module is bound to
-//		let boundPort = keeper.port(request: request)
-//
-//		guard boundPort == portId else {
-//            throw CosmosError.wrap(
-//                error: CosmosError.invalidPort,
-//                description: "invalid port: \(portId), expected \(boundPort)"
-//            )
-//		}
-//
-//		guard version == Self.version else {
-//            throw CosmosError.wrap(
-//                error: CosmosError.invalidVersion,
-//                description: "got \(version), expected \(Self.version)"
-//            )
-//		}
+		// NOTE: for escrow address security only 2^32 channels are allowed to be created
+		// Issue: https://github.com/cosmos/cosmos-sdk/issues/7737
+        let channelSequence = try ChannelKeys.parseChannelSequence(channelId: channelId)
+
+		guard channelSequence <= UInt32.max else {
+            throw CosmosError.wrap(
+                error: TransferError.maxTransferChannels,
+                description: "channel sequence \(channelSequence) is greater than max allowed transfer channels \(UInt32.max)"
+            )
+		}
+
+		guard order == .unordered else {
+            throw CosmosError.wrap(
+                error: ChannelError.invalidChannelOrdering,
+                description: "expected \(Order.unordered) channel, got \(order) "
+            )
+		}
+
+		// Require portID is the portID transfer module is bound to
+		let boundPort = keeper.port(request: request)
+
+		guard boundPort == portId else {
+            throw CosmosError.wrap(
+                error: PortError.invalidPort,
+                description: "invalid port: \(portId), expected \(boundPort)"
+            )
+		}
+
+		guard version == TransferKeys.version else {
+            throw CosmosError.wrap(
+                error: TransferError.invalidVersion,
+                description: "got \(version), expected \(TransferKeys.version)"
+            )
+		}
 	}
 
 	// OnChanOpenInit implements the IBCModule interface
 	public func onChannelOpenInit(
 		request: Request,
-		order: Ibc_Core_Channel_V1_Order,
+		order: Order,
 		connectionHops: [String],
 		portId: String,
 		channelId: String,
-//		channelCapability: Capability,
-        counterparty: Ibc_Core_Channel_V1_Counterparty,
+		channelCapability: Capability,
+        counterparty: Counterparty,
 		version: String
 	) throws {
-        // TODO: Implement
-        fatalError()
-//		try validateTransferChannelParams(
-//			request: request,
-//			keeper: keeper,
-//			order: order,
-//			portId: portId,
-//			channelId: channelId,
-//			version: version
-//		)
-//
-//		// Claim channel capability passed back by IBC module
-//		try keeper.claimCapability(
-//			request: request,
-////			channelCapability: channelCapability,
-//			name: channelCapabilityPath(portID: portID, channelID: channelID)
-//		)
+		try validateTransferChannelParams(
+			request: request,
+			keeper: keeper,
+			order: order,
+			portId: portId,
+			channelId: channelId,
+			version: version
+		)
+
+		// Claim channel capability passed back by IBC module
+		try keeper.claim(
+			capability: channelCapability,
+            name: HostKeys.channelCapabilityPath(portId: portId, channelId: channelId),
+            request: request
+		)
 	}
 
 	// OnChanOpenTry implements the IBCModule interface
 	public func onChannelOpenTry(
 		request: Request,
-		order: Ibc_Core_Channel_V1_Order,
+		order: Order,
 		connectionHops: [String],
         portId: String,
         channelId: String,
-//		channelCapability: Capability,
-		counterparty: Ibc_Core_Channel_V1_Counterparty,
+		channelCapability: Capability,
+		counterparty: Counterparty,
 		version: String,
 		counterpartyVersion: String
 	) throws {
-        // TODO: Implement
-        fatalError()
-//		try validateTransferChannelParams(
-//			request: request,
-//			keeper: keeper,
-//			order: order,
-//			portID: portID,
-//			channelID: channelID,
-//			version: version
-//		)
-//
-//		guard counterpartyVersion == Self.version else {
-//			return sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: got: %s, expected %s", counterpartyVersion, types.Version)
-//		}
-//
-//		// Module may have already claimed capability in OnChanOpenInit in the case of crossing hellos
-//		// (ie chainA and chainB both call ChanOpenInit before one of them calls ChanOpenTry)
-//		// If module can already authenticate the capability then module already owns it so we don't need to claim
-//		// Otherwise, module does not have channel capability and we must claim it from IBC
-//		let alreadyClaimedCapability = keeper.authenticateCapability(
-//			request: request,
-////			channelCapability: channelCapability,
-//			name: channelCapabilityPath(portID: portID, channelID: channelID)
-//		)
-//
-//		guard alreadyClaimedCapability else {
-//			// Only claim channel capability passed back by IBC module if we do not already own it
-//			try keeper.claimCapability(
-//				request: request,
-////				channelCapability: channelCapability,
-//				name: channelCapabilityPath(portID: portID, channelID: channelID)
-//			)
-//		}
+		try validateTransferChannelParams(
+			request: request,
+			keeper: keeper,
+			order: order,
+			portId: portId,
+			channelId: channelId,
+			version: version
+		)
+
+		guard counterpartyVersion == TransferKeys.version else {
+            throw CosmosError.wrap(
+                error: TransferError.invalidVersion,
+                description: "invalid counterparty version: got: \(counterpartyVersion), expected \(TransferKeys.version)"
+            )
+		}
+
+		// Module may have already claimed capability in OnChanOpenInit in the case of crossing hellos
+		// (ie chainA and chainB both call ChanOpenInit before one of them calls ChanOpenTry)
+		// If module can already authenticate the capability then module already owns it so we don't need to claim
+		// Otherwise, module does not have channel capability and we must claim it from IBC
+		let alreadyClaimedCapability = keeper.authenticate(
+			capability: channelCapability,
+            name: HostKeys.channelCapabilityPath(portId: portId, channelId: channelId),
+            request: request
+		)
+
+		guard alreadyClaimedCapability else {
+			// Only claim channel capability passed back by IBC module if we do not already own it
+			return try keeper.claim(
+                capability: channelCapability,
+                name: HostKeys.channelCapabilityPath(portId: portId, channelId: channelId),
+                request: request
+			)
+		}
 	}
 
 	// OnChanOpenAck implements the IBCModule interface
@@ -354,7 +354,7 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 	// OnRecvPacket implements the IBCModule interface
 	public func onReceivePacket(
 		request: Request,
-		packet: Ibc_Core_Channel_V1_Packet
+		packet: Packet
 	) throws -> (Result, Data) {
         // TODO: Implement
         fatalError()
@@ -402,7 +402,7 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 	// OnAcknowledgementPacket implements the IBCModule interface
 	public func onAcknowledgementPacket(
 		request: Request,
-		packet: Ibc_Core_Channel_V1_Packet,
+		packet: Packet,
 		acknowledgement: Data
 	) throws -> Result {
         // TODO: Implement
@@ -472,7 +472,7 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 	// OnTimeoutPacket implements the IBCModule interface
 	public func onTimeoutPacket(
 		request: Request,
-		packet: Ibc_Core_Channel_V1_Packet
+		packet: Packet
 	) throws -> Result {
         // TODO: Implement
         fatalError()

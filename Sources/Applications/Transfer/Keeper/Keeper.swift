@@ -182,11 +182,11 @@ extension TransferKeeper {
         }
     }
 
-//// AuthenticateCapability wraps the scopedKeeper's AuthenticateCapability function
-//func (k Keeper) AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) bool {
-//	return k.scopedKeeper.AuthenticateCapability(ctx, cap, name)
-//}
-//
+    // AuthenticateCapability wraps the scopedKeeper's AuthenticateCapability function
+    func authenticate(capability: Capability, name: String, request: Request) -> Bool {
+        scopedKeeper.authenticate(capability: capability, name: name, request: request)
+    }
+
     // ClaimCapability allows the transfer module that can claim a capability that IBC module
     // passes to it
     func claim(capability: Capability, name: String, request: Request) throws {

@@ -5,7 +5,7 @@ struct GenericError: Swift.Error, CustomStringConvertible {
 }
 
 // IBC channel sentinel errors
-extension CosmosError {
+public enum TransferError {
     static let invalidPacketTimeout    = CosmosError.register(codespace: TransferKeys.moduleName, code: 2, description: "invalid packet timeout")
     static let invalidDenominationForTransfer = CosmosError.register(codespace: TransferKeys.moduleName, code: 3, description: "invalid denomination for cross-chain transfer")
     static let invalidVersion          = CosmosError.register(codespace: TransferKeys.moduleName, code: 4, description: "invalid ICS20 version")

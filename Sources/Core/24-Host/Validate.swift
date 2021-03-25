@@ -32,7 +32,7 @@ extension Host {
     private static func defaultIdentifierValidator(id: String, min: Int, max: Int) throws {
         guard !id.trimmingCharacters(in: .whitespaces).isEmpty else {
             throw CosmosError.wrap(
-                error: CosmosError.invalidId,
+                error: HostError.invalidId,
                 description: "identifier cannot be blank"
             )
         }
@@ -40,7 +40,7 @@ extension Host {
         // valid id MUST NOT contain "/" separator
         guard !id.contains("/") else {
             throw CosmosError.wrap(
-                error: CosmosError.invalidId,
+                error: HostError.invalidId,
                 description: "identifier \(id) cannot contain separator '/'"
             )
         }
@@ -48,7 +48,7 @@ extension Host {
         // valid id must fit the length requirements
         guard id.count > min && id.count < max else {
             throw CosmosError.wrap(
-                error: CosmosError.invalidId,
+                error: HostError.invalidId,
                 description: "identifier \(id) has invalid length: \(id.count), must be between \(min)-\(max) characters"
             )
         }
@@ -56,7 +56,7 @@ extension Host {
         // valid id must contain only lower alphabetic characters
         guard isValid(id: id) else {
             throw CosmosError.wrap(
-                error: CosmosError.invalidId,
+                error: HostError.invalidId,
                 description: "identifier \(id) must contain only alphanumeric or the following characters: '.', '_', '+', '-', '#', '[', ']', '<', '>'"
             )
         }

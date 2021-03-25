@@ -43,6 +43,7 @@ extension HostKeys {
 	static let keyPacketReceiptPrefix     = "receipts"
 }
 
+extension HostKeys {
 //// FullClientPath returns the full path of a specific client path in the format:
 //// "clients/{clientID}/{path}" as a string.
 //func FullClientPath(clientID string, path string) string {
@@ -123,25 +124,25 @@ extension HostKeys {
 //	return []byte(ConnectionPath(connectionID))
 //}
 //
-//// ICS04
-//// The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#store-paths
-//
-//// ChannelPath defines the path under which channels are stored
-//func ChannelPath(portID, channelID string) string {
-//	return fmt.Sprintf("%s/%s", KeyChannelEndPrefix, channelPath(portID, channelID))
-//}
-//
+    // ICS04
+    // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#store-paths
+
+//    // ChannelPath defines the path under which channels are stored
+//    func channelPath(portId: String, channelId: String) -> String {
+//        "\(keyChannnelEndPrefix)/\()", KeyChannelEndPrefix, channelPath(portID, channelID))
+//    }
+
 //// ChannelKey returns the store key for a particular channel
 //func ChannelKey(portID, channelID string) []byte {
 //	return []byte(ChannelPath(portID, channelID))
 //}
-//
-//// ChannelCapabilityPath defines the path under which capability keys associated
-//// with a channel are stored
-//func ChannelCapabilityPath(portID, channelID string) string {
-//	return fmt.Sprintf("%s/%s", KeyChannelCapabilityPrefix, channelPath(portID, channelID))
-//}
-//
+
+    // ChannelCapabilityPath defines the path under which capability keys associated
+    // with a channel are stored
+    public static func channelCapabilityPath(portId: String, channelId: String) -> String {
+        "\(keyChannelCapabilityPrefix)/\(_channelPath(portId: portId, channelId: channelId))"
+    }
+
 //// NextSequenceSendPath defines the next send sequence counter store path
 //func NextSequenceSendPath(portID, channelID string) string {
 //	return fmt.Sprintf("%s/%s", KeyNextSeqSendPrefix, channelPath(portID, channelID))
@@ -217,11 +218,11 @@ extension HostKeys {
 //func PacketReceiptKey(portID, channelID string, sequence uint64) []byte {
 //	return []byte(PacketReceiptPath(portID, channelID, sequence))
 //}
-//
-//func channelPath(portID, channelID string) string {
-//	return fmt.Sprintf("%s/%s/%s/%s", KeyPortPrefix, portID, KeyChannelPrefix, channelID)
-//}
-//
+
+    static func _channelPath(portId: String, channelId: String) -> String {
+        "\(keyPortPrefix)/\(portId)/\(keyChannelPrefix)/\(channelId)"
+    }
+
 //func sequencePath(sequence uint64) string {
 //	return fmt.Sprintf("%s/%d", KeySequencePrefix, sequence)
 //}
@@ -229,7 +230,6 @@ extension HostKeys {
 // ICS05
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#store-paths
 
-extension HostKeys {
     // PortPath defines the path under which ports paths are stored on the capability module
     public static func portPath(portId: String) -> String {
         "\(keyPortPrefix)/\(portId)"

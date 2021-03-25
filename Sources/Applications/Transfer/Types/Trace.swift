@@ -206,7 +206,7 @@ extension DenominationTrace {
 
         guard !denominationSplit.last!.trimmingCharacters(in: .whitespaces).isEmpty else {
             throw CosmosError.wrap(
-                error: CosmosError.invalidDenominationForTransfer,
+                error: TransferError.invalidDenominationForTransfer,
                 description: "base denomination cannot be blank"
             )
         }
@@ -240,7 +240,7 @@ extension DenominationTrace {
             (denominationSplit.count == 2 && (denominationSplit[0] != TransferKeys.denominationPrefix || denominationSplit[1].trimmingCharacters(in: .whitespaces).isEmpty))
         {
             throw CosmosError.wrap(
-                error: CosmosError.invalidDenominationForTransfer,
+                error: TransferError.invalidDenominationForTransfer,
                 description: "denomination should be prefixed with the format 'ibc/{hash(trace + \"/\" + \(denomination)}'"
             )
         }
