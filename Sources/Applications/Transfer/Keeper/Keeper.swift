@@ -18,9 +18,11 @@
 //)
 
 import Database
+import Tendermint
 import Cosmos
 import Params
 import Auth
+import Bank
 import Capability
 import Host
 
@@ -33,7 +35,7 @@ public struct TransferKeeper {
 //	channelKeeper types.ChannelKeeper
     let portKeeper: PortKeeper
     let authKeeper: AccountKeeper
-//	bankKeeper    types.BankKeeper
+    let bankKeeper: BankKeeper
     let scopedKeeper: ScopedCapabilityKeeper
 }
 
@@ -129,12 +131,16 @@ extension TransferKeeper {
 //	denomTrace := k.MustUnmarshalDenomTrace(bz)
 //	return denomTrace, true
 //}
-//
-//// HasDenomTrace checks if a the key with the given denomination trace hash exists on the store.
-//func (k Keeper) HasDenomTrace(ctx sdk.Context, denomTraceHash tmbytes.HexBytes) bool {
-//	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.DenomTraceKey)
-//	return store.Has(denomTraceHash)
-//}
+
+    // HasDenomTrace checks if a the key with the given denomination trace hash exists on the store.
+    func has(denominationTrace hash: HexadecimalData, request: Request) -> Bool {
+        let store = PrefixStore(
+            parent: request.keyValueStore(key: storeKey),
+            prefix: TransferKeys.denominationTraceKey
+        )
+        
+        return store.has(key: hash.rawValue)
+    }
 
     // SetDenomTrace sets a new {trace hash -> denom trace} pair to the store.
     func set(denominationTrace: DenominationTrace, request: Request) {

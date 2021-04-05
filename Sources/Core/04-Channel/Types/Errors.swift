@@ -16,7 +16,7 @@ public enum ChannelError {
 //	ErrInvalidPacket             = sdkerrors.Register(SubModuleName, 13, "invalid packet")
 //	ErrPacketTimeout             = sdkerrors.Register(SubModuleName, 14, "packet timeout")
 //	ErrTooManyConnectionHops     = sdkerrors.Register(SubModuleName, 15, "too many connection hops")
-//	ErrInvalidAcknowledgement    = sdkerrors.Register(SubModuleName, 16, "invalid acknowledgement")
+    static let invalidAcknowledgement    = CosmosError.register(codespace: ChannelKeys.subModuleName, code: 16, description: "invalid acknowledgement")
 //	ErrPacketCommitmentNotFound  = sdkerrors.Register(SubModuleName, 17, "packet commitment not found")
 //	ErrPacketReceived            = sdkerrors.Register(SubModuleName, 18, "packet already received")
 //	ErrAcknowledgementExists     = sdkerrors.Register(SubModuleName, 19, "acknowledgement for packet already exists")

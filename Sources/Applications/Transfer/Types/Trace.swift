@@ -232,7 +232,7 @@ extension DenominationTrace {
     //  - A valid base denomination (eg: 'uatom')
     //  - A valid fungible token representation (i.e 'ibc/{hash}') per ADR 001 https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-001-coin-source-tracing.md
     static func validate(ibcDenomination denomination: String) throws {
-        try Cosmos.validate(denomination: denomination)
+        try Coins.validate(denomination: denomination)
         let denominationSplit = denomination.split(separator: "/", maxSplits: 1)
 
         if (denomination.trimmingCharacters(in: .whitespaces).isEmpty) ||

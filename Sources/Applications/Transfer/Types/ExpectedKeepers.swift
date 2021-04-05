@@ -19,15 +19,42 @@ protocol AccountKeeper {
     func moduleAccount(request: Request, name: String) -> ModuleAccount?
 }
 
-//// BankKeeper defines the expected bank keeper
-//type BankKeeper interface {
-//	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-//	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-//	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-//	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-//	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-//}
-//
+// BankKeeper defines the expected bank keeper
+protocol BankKeeper {
+    func sendCoins(
+        request: Request,
+        from address: AccountAddress,
+        to address: AccountAddress,
+        amount: [Coin]
+    ) throws
+    
+    func mintCoins(
+        request: Request,
+        moduleName: String,
+        amount: [Coin]
+    ) throws
+    
+	func burnCoins(
+        request: Request,
+        moduleName: String,
+        amount: Coins
+    ) throws
+    
+	func sendCoinsFromModuleToAccount(
+        request: Request,
+        senderModule: String,
+        recipientAddress: AccountAddress,
+        amount: Coins
+    ) throws
+    
+	func sendCoinsFromAccountToModule(
+        request: Request,
+        senderAddress: AccountAddress,
+        recipientModule: String,
+        amount: Coins
+    ) throws
+}
+
 //// ChannelKeeper defines the expected IBC channel keeper
 //type ChannelKeeper interface {
 //	GetChannel(ctx sdk.Context, srcPort, srcChan string) (channel channeltypes.Channel, found bool)

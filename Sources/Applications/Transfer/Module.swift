@@ -318,11 +318,12 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 		channelId: String,
 		counterpartyVersion: String
 	) throws {
-        // TODO: Implement
-        fatalError()
-//		guard counterpartyVersion == Self.version else {
-//			return sdkerrors.Wrapf(types.ErrInvalidVersion, "invalid counterparty version: %s, expected %s", counterpartyVersion, types.Version)
-//		}
+		guard counterpartyVersion == TransferKeys.version else {
+            throw CosmosError.wrap(
+                error: TransferError.invalidVersion,
+                description: "invalid counterparty version: \(counterpartyVersion), expected \(TransferKeys.version)"
+            )
+		}
 	}
 
 	// OnChanOpenConfirm implements the IBCModule interface
@@ -338,10 +339,11 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 		portId: String,
 		channelId: String
 	) throws {
-        // TODO: Implement
-        fatalError()
-//		// Disallow user-initiated channel closing for transfer channels
-//		sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "user cannot close channel")
+		// Disallow user-initiated channel closing for transfer channels
+        throw CosmosError.wrap(
+            error: CosmosError.invalidRequest,
+            description: "user cannot close channel"
+        )
 	}
 
 	// OnChanCloseConfirm implements the IBCModule interface
@@ -356,47 +358,51 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 		request: Request,
 		packet: Packet
 	) throws -> (Result, Data) {
-        // TODO: Implement
-        fatalError()
-//        let data: FungibleTokenPacket
-//
-//		do {
-//			data = try JSONDecoder().decode(FungibleTokenPacket.self, from: packet.data)
-//		} catch {
-//			throw sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
-//		}
-//
-//		var acknowledgement = AcknowledgementResult(data: Data([1]))
-//
-//		do {
-//			try keeper.onReceivePacket(
-//				request: request,
-//				packet: packet,
-//				data: data
-//			)
-//		} catch {
-//			acknowledgement = AcknowledgementError(error: error)
-//		}
-//
-//		let event = Event(
-//			type: .packet,
-//			attributes: [
-//				Attribute(sdk.AttributeKeyModule, types.ModuleName),
-//				Attribute(types.AttributeKeyReceiver, data.Receiver),
-//				Attribute(types.AttributeKeyDenom, data.Denom),
-//				Attribute(types.AttributeKeyAmount, fmt.Sprintf("%d", data.Amount)),
-//				Attribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", err != nil)),
-//			]
-//		)
-//
-//		request.eventManager.emit(event: event)
-//
-//		// NOTE: acknowledgement will be written synchronously during IBC handler execution.
-//		let result = Result(
-//			events: request.eventManager.events.toABCIEvents()
-//		)
-//
-//		return (result, acknowledgement.data)
+        let data: FungibleTokenPacketData
+
+		do {
+			data = try JSONDecoder().decode(FungibleTokenPacketData.self, from: packet.data)
+		} catch {
+            throw CosmosError.wrap(
+                error: CosmosError.unknownRequest,
+                description: "cannot unmarshal ICS-20 transfer packet data: \(error)"
+            )
+		}
+
+        var acknowledgement = AcknowledgementResponse.result(Data([1]))
+        let acknowledgementSuccess: Bool
+        
+		do {
+			try keeper.onReceive(
+				packet: packet,
+				data: data,
+                request: request
+			)
+            acknowledgementSuccess = true
+		} catch {
+            acknowledgement = AcknowledgementResponse.error(error.localizedDescription)
+            acknowledgementSuccess = false
+		}
+
+		let event = Event(
+			type: TransferEventType.packet,
+			attributes: [
+                Attribute(key: AttributeKey.module, value: TransferKeys.moduleName),
+                Attribute(key: TransferAttributeKey.receiver, value: data.receiver),
+                Attribute(key: TransferAttributeKey.denomination, value: data.denomination),
+                Attribute(key: TransferAttributeKey.amount, value: "\(data.amount)"),
+                Attribute(key: TransferAttributeKey.acknowledgementSuccess, value: "\(acknowledgementSuccess)"),
+			]
+		)
+
+		request.eventManager.emit(event: event)
+
+		// NOTE: acknowledgement will be written synchronously during IBC handler execution.
+		let result = Result(
+            events: request.eventManager.events // .toABCI()
+		)
+
+		return (result, acknowledgement.data)
 	}
 
 	// OnAcknowledgementPacket implements the IBCModule interface

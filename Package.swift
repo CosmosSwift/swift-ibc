@@ -33,6 +33,7 @@ let package = Package(
                 .product(name: "Cosmos", package: "swift-cosmos"),
                 .product(name: "Params", package: "swift-cosmos"),
                 .product(name: "Auth", package: "swift-cosmos"),
+                .product(name: "Bank", package: "swift-cosmos"),
                 .product(name: "Capability", package: "swift-cosmos"),
             ],
             path: "./Sources/Applications/Transfer"

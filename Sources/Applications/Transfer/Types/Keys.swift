@@ -1,13 +1,6 @@
-//package types
-//
-//import (
-//	"crypto/sha256"
-//	"fmt"
-//
-//	sdk "github.com/cosmos/cosmos-sdk/types"
-//)
-
+import Crypto
 import Foundation
+import Cosmos
 
 public enum TransferKeys {
 	// ModuleName defines the IBC transfer name
@@ -40,19 +33,22 @@ extension TransferKeys {
 	static let denominationTraceKey = Data([0x02])
 }
 
-//// GetEscrowAddress returns the escrow address for the specified channel.
-//// The escrow address follows the format as outlined in ADR 028:
-//// https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md
-//func GetEscrowAddress(portID, channelID string) sdk.AccAddress {
-//	// a slash is used to create domain separation between port and channel identifiers to
-//	// prevent address collisions between escrow addresses created for different channels
-//	contents := fmt.Sprintf("%s/%s", portID, channelID)
-//
-//	// ADR 028 AddressHash construction
-//	preImage := []byte(Version)
-//	preImage = append(preImage, 0)
-//	preImage = append(preImage, contents...)
-//	hash := sha256.Sum256(preImage)
-//	return hash[:20]
-//}
-//
+extension TransferKeys {
+    // GetEscrowAddress returns the escrow address for the specified channel.
+    // The escrow address follows the format as outlined in ADR 028:
+    // https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md
+    static func escrowAddress(portId: String, channelId: String) -> AccountAddress {
+        // a slash is used to create domain separation between port and channel identifiers to
+        // prevent address collisions between escrow addresses created for different channels
+        let contents = "\(portId)/\(channelId)".data
+
+        // ADR 028 AddressHash construction
+        var preImage = version.data
+        preImage.append(0)
+        preImage.append(contentsOf: contents)
+        let hash = SHA256.hash(data: preImage)
+        // TODO: Check if this is correct
+        return AccountAddress(data: Data(hash.prefix(20)))
+//        return hash[:20]
+    }
+}

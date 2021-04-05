@@ -6,6 +6,36 @@ TODO: substitute with the relevant proto generated file
 
 import CosmosProto
 
+// FungibleTokenPacketData defines a struct for the packet payload
+// See FungibleTokenPacketData spec:
+// https://github.com/cosmos/ics/tree/master/spec/ics-020-fungible-token-transfer#data-structures
+struct FungibleTokenPacketData: Codable {
+    // the token denomination to be transferred
+    let denomination: String
+    // the token amount to be transferred
+    let amount: UInt64
+    // the sender address
+    let sender: String
+    // the recipient address on the destination chain
+    let receiver: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case denomination = "denom"
+        case amount
+        case sender
+        case receiver
+    }
+}
+
+extension FungibleTokenPacketData {
+    init(_ data: Ibc_Applications_Transfer_V1_FungibleTokenPacketData) {
+        self.denomination = data.denom
+        self.amount = data.amount
+        self.sender = data.sender
+        self.receiver = data.receiver
+    }
+}
+
 // Params defines the set of IBC transfer parameters.
 // NOTE: To prevent a single token from being transferred, set the
 // TransfersEnabled parameter to true and then set the bank module's SendEnabled
