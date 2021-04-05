@@ -1,23 +1,21 @@
-/*
-package types
-
 // IBC transfer events
-const (
-	EventTypeTimeout      = "timeout"
-	EventTypePacket       = "fungible_token_packet"
-	EventTypeTransfer     = "ibc_transfer"
-	EventTypeChannelClose = "channel_closed"
-	EventTypeDenomTrace   = "denomination_trace"
+enum TransferEventType {
+    static let timeout      = "timeout"
+	static let packet       = "fungible_token_packet"
+	static let transfer     = "ibc_transfer"
+	static let channelClose = "channel_closed"
+	static let denominationTrace   = "denomination_trace"
+}
 
-	AttributeKeyReceiver       = "receiver"
-	AttributeKeyDenom          = "denom"
-	AttributeKeyAmount         = "amount"
-	AttributeKeyRefundReceiver = "refund_receiver"
-	AttributeKeyRefundDenom    = "refund_denom"
-	AttributeKeyRefundAmount   = "refund_amount"
-	AttributeKeyAckSuccess     = "success"
-	AttributeKeyAck            = "acknowledgement"
-	AttributeKeyAckError       = "error"
-	AttributeKeyTraceHash      = "trace_hash"
-)
-*/
+enum TransferAttributeKey {
+	static let receiver           = "receiver"
+	static let denomination       = "denom"
+	static let amount             = "amount"
+	static let refundReceiver     = "refund_receiver"
+	static let refundDenomination = "refund_denom"
+	static let refundAmount       = "refund_amount"
+    static let acknowledgementSuccess = "success"
+	static let acknowledgement    = "acknowledgement"
+	static let acknowledgementError   = "error"
+	static let traceHash          = "trace_hash"
+}

@@ -1,37 +1,31 @@
-/*
-package types
+import Host
 
-import (
-	host "github.com/cosmos/ibc-go/modules/core/24-host"
-)
+extension TransferGenesisState {
+//    // NewGenesisState creates a new ibc-transfer GenesisState instance.
+//    init(
+//        portId: String,
+//        denominationTraces: Traces,
+//        parameters: Parameters
+//    ) {
+//        self.portId = portId
+//        self.denominationTraces = denominationTraces
+//        self.parameters = parameters
+//    }
 
-// NewGenesisState creates a new ibc-transfer GenesisState instance.
-func NewGenesisState(portID string, denomTraces Traces, params Params) *GenesisState {
-	return &GenesisState{
-		PortId:      portID,
-		DenomTraces: denomTraces,
-		Params:      params,
-	}
-}
-
-// DefaultGenesisState returns a GenesisState with "transfer" as the default PortID.
-func DefaultGenesisState() *GenesisState {
-	return &GenesisState{
-		PortId:      PortID,
-		DenomTraces: Traces{},
-		Params:      DefaultParams(),
-	}
+    // DefaultGenesisState returns a GenesisState with "transfer" as the default PortID.
+    static let `default` = TransferGenesisState(
+        portId: TransferKeys.portId,
+		denominationTraces: Traces(),
+        parameters: .default
+	)
 }
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
-func (gs GenesisState) Validate() error {
-	if err := host.PortIdentifierValidator(gs.PortId); err != nil {
-		return err
-	}
-	if err := gs.DenomTraces.Validate(); err != nil {
-		return err
-	}
-	return gs.Params.Validate()
+extension TransferGenesisState {
+    func validate() throws {
+        try Host.portIdentifierValidator(id: portId)
+        try denominationTraces.validate()
+        try parameters.validate()
+    }
 }
-*/

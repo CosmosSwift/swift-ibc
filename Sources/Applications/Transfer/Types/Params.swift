@@ -1,67 +1,65 @@
-/*
-package types
+import Cosmos
+import Params
 
-import (
-	"fmt"
-
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-)
-
-const (
+extension TransferParameters {
 	// DefaultSendEnabled enabled
-	DefaultSendEnabled = true
+    static let defaultIsSendEnabled = true
 	// DefaultReceiveEnabled enabled
-	DefaultReceiveEnabled = true
-)
+	static let defaultIsReceiveEnabled = true
+}
 
-var (
+extension TransferKeys {
 	// KeySendEnabled is store's key for SendEnabled Params
-	KeySendEnabled = []byte("SendEnabled")
+    static let isSendEnabledKey = "SendEnabled".data
 	// KeyReceiveEnabled is store's key for ReceiveEnabled Params
-	KeyReceiveEnabled = []byte("ReceiveEnabled")
-)
-
-// ParamKeyTable type declaration for parameters
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+    static let isReceiveEnabledKey = "ReceiveEnabled".data
 }
 
-// NewParams creates a new parameter configuration for the ibc transfer module
-func NewParams(enableSend, enableReceive bool) Params {
-	return Params{
-		SendEnabled:    enableSend,
-		ReceiveEnabled: enableReceive,
-	}
+extension TransferParameters: ParameterSet {
+    // ParamKeyTable type declaration for parameters
+    var parameterKeyTable: KeyTable {
+        KeyTable(parameterSet: TransferParameters.default)
+    }
 }
 
-// DefaultParams is the default parameter configuration for the ibc-transfer module
-func DefaultParams() Params {
-	return NewParams(DefaultSendEnabled, DefaultReceiveEnabled)
+extension TransferParameters {
+//    // NewParams creates a new parameter configuration for the ibc transfer module
+//    init(sendEnabled: Bool, receiveEnabled: Bool) {
+//        self.sendEnabled = sendEnabled
+//        self.receiveEnabled = receiveEnabled
+//    }
+
+    // DefaultParams is the default parameter configuration for the ibc-transfer module
+    static let `default` = TransferParameters(
+        isSendEnabled: defaultIsSendEnabled,
+        isReceiveEnabled: defaultIsReceiveEnabled
+    )
+
+    // Validate all ibc-transfer module parameters
+    func validate() throws {
+        try Self.validateEnabled(value: isSendEnabled)
+        try Self.validateEnabled(value: isReceiveEnabled)
+    }
+
+    // ParamSetPairs implements params.ParamSet
+    var parameterSetPairs: ParameterSetPairs {
+        [
+            ParameterSetPair(
+                key: TransferKeys.isSendEnabledKey,
+                value: isSendEnabled,
+                validatorFunction: Self.validateEnabled
+            ),
+            ParameterSetPair(
+                key: TransferKeys.isReceiveEnabledKey,
+                value: isReceiveEnabled,
+                validatorFunction: Self.validateEnabled
+            )
+        ]
+    }
+    
+    private static func validateEnabled(value: Any) throws {
+        guard value is Bool else {
+            throw GenericError(description: "invalid parameter type: \(type(of: value))")
+        }
+    }
 }
-
-// Validate all ibc-transfer module parameters
-func (p Params) Validate() error {
-	if err := validateEnabled(p.SendEnabled); err != nil {
-		return err
-	}
-
-	return validateEnabled(p.ReceiveEnabled)
-}
-
-// ParamSetPairs implements params.ParamSet
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeySendEnabled, p.SendEnabled, validateEnabled),
-		paramtypes.NewParamSetPair(KeyReceiveEnabled, p.ReceiveEnabled, validateEnabled),
-	}
-}
-
-func validateEnabled(i interface{}) error {
-	_, ok := i.(bool)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	return nil
-}
-*/

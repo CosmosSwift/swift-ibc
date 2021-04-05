@@ -1,19 +1,17 @@
-/*
-package types
+import Cosmos
 
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+struct GenericError: Swift.Error, CustomStringConvertible {
+    var description: String
+}
 
 // IBC channel sentinel errors
-var (
-	ErrInvalidPacketTimeout    = sdkerrors.Register(ModuleName, 2, "invalid packet timeout")
-	ErrInvalidDenomForTransfer = sdkerrors.Register(ModuleName, 3, "invalid denomination for cross-chain transfer")
-	ErrInvalidVersion          = sdkerrors.Register(ModuleName, 4, "invalid ICS20 version")
-	ErrInvalidAmount           = sdkerrors.Register(ModuleName, 5, "invalid token amount")
-	ErrTraceNotFound           = sdkerrors.Register(ModuleName, 6, "denomination trace not found")
-	ErrSendDisabled            = sdkerrors.Register(ModuleName, 7, "fungible token transfers from this chain are disabled")
-	ErrReceiveDisabled         = sdkerrors.Register(ModuleName, 8, "fungible token transfers to this chain are disabled")
-	ErrMaxTransferChannels     = sdkerrors.Register(ModuleName, 9, "max transfer channels")
-)
-*/
+public enum TransferError {
+    static let invalidPacketTimeout    = CosmosError.register(codespace: TransferKeys.moduleName, code: 2, description: "invalid packet timeout")
+    static let invalidDenominationForTransfer = CosmosError.register(codespace: TransferKeys.moduleName, code: 3, description: "invalid denomination for cross-chain transfer")
+    static let invalidVersion          = CosmosError.register(codespace: TransferKeys.moduleName, code: 4, description: "invalid ICS20 version")
+    static let invalidAmount           = CosmosError.register(codespace: TransferKeys.moduleName, code: 5, description: "invalid token amount")
+    static let traceNotFound           = CosmosError.register(codespace: TransferKeys.moduleName, code: 6, description: "denomination trace not found")
+    static let sendDisabled            = CosmosError.register(codespace: TransferKeys.moduleName, code: 7, description: "fungible token transfers from this chain are disabled")
+    static let receiveDisabled         = CosmosError.register(codespace: TransferKeys.moduleName, code: 8, description: "fungible token transfers to this chain are disabled")
+    static let maxTransferChannels     = CosmosError.register(codespace: TransferKeys.moduleName, code: 9, description: "max transfer channels")
+}

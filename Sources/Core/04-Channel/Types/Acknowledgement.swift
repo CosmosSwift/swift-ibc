@@ -1,52 +1,45 @@
-/*
-package types
+import Foundation
+import Cosmos
 
-import (
-	"strings"
+public extension Acknowledgement {
+    // NewResultAcknowledgement returns a new instance of Acknowledgement using an Acknowledgement_Result
+    // type in the Response field.
+    init(result data: Data) {
+        self.init(response: .result(data))
+    }
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+    // NewErrorAcknowledgement returns a new instance of Acknowledgement using an Acknowledgement_Error
+    // type in the Response field.
+    init(error: String) {
+        self.init(response: .error(error))
+    }
 
-// NewResultAcknowledgement returns a new instance of Acknowledgement using an Acknowledgement_Result
-// type in the Response field.
-func NewResultAcknowledgement(result []byte) Acknowledgement {
-	return Acknowledgement{
-		Response: &Acknowledgement_Result{
-			Result: result,
-		},
-	}
+    // GetBytes is a helper for serialising acknowledgements
+    public var data: Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        return try! encoder.encode(self)
+        // TODO: Check if using codec is required
+//        sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&ack))
+    }
+
+    // ValidateBasic performs a basic validation of the acknowledgement
+    func validateBasic() throws {
+        switch self.response {
+        case .result(let data):
+            guard !data.isEmpty else {
+                throw CosmosError.wrap(
+                    error: ChannelError.invalidAcknowledgement,
+                    description: "acknowledgement result cannot be empty"
+                )
+            }
+        case .error(let error):
+            guard !error.trimmingCharacters(in: .whitespaces).isEmpty else {
+                throw CosmosError.wrap(
+                    error: ChannelError.invalidAcknowledgement,
+                    description: "acknowledgement error cannot be empty"
+                )
+            }
+        }
+    }
 }
-
-// NewErrorAcknowledgement returns a new instance of Acknowledgement using an Acknowledgement_Error
-// type in the Response field.
-func NewErrorAcknowledgement(err string) Acknowledgement {
-	return Acknowledgement{
-		Response: &Acknowledgement_Error{
-			Error: err,
-		},
-	}
-}
-
-// GetBytes is a helper for serialising acknowledgements
-func (ack Acknowledgement) GetBytes() []byte {
-	return sdk.MustSortJSON(SubModuleCdc.MustMarshalJSON(&ack))
-}
-
-// ValidateBasic performs a basic validation of the acknowledgement
-func (ack Acknowledgement) ValidateBasic() error {
-	switch resp := ack.Response.(type) {
-	case *Acknowledgement_Result:
-		if len(resp.Result) == 0 {
-			return sdkerrors.Wrap(ErrInvalidAcknowledgement, "acknowledgement result cannot be empty")
-		}
-	case *Acknowledgement_Error:
-		if strings.TrimSpace(resp.Error) == "" {
-			return sdkerrors.Wrap(ErrInvalidAcknowledgement, "acknowledgement error cannot be empty")
-		}
-	default:
-		return sdkerrors.Wrapf(ErrInvalidAcknowledgement, "unsupported acknowledgement response field type %T", resp)
-	}
-	return nil
-}
-*/

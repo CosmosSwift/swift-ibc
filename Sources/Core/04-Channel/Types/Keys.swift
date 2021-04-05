@@ -1,63 +1,63 @@
-/*
-package types
+import Foundation
+import Cosmos
+import Host
 
-import (
-	"fmt"
-	"regexp"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	host "github.com/cosmos/ibc-go/modules/core/24-host"
-)
-
-const (
+public enum ChannelKeys {
 	// SubModuleName defines the IBC channels name
-	SubModuleName = "channel"
+    static let subModuleName = "channel"
 
 	// StoreKey is the store key string for IBC channels
-	StoreKey = SubModuleName
+	static let storeKey = subModuleName
 
 	// RouterKey is the message route for IBC channels
-	RouterKey = SubModuleName
+	static let routerKey = subModuleName
 
 	// QuerierRoute is the querier route for IBC channels
-	QuerierRoute = SubModuleName
+	static let querierRoute = subModuleName
 
 	// KeyNextChannelSequence is the key used to store the next channel sequence in
 	// the keeper.
-	KeyNextChannelSequence = "nextChannelSequence"
+	static let keyNextChannelSequence = "nextChannelSequence"
 
 	// ChannelPrefix is the prefix used when creating a channel identifier
-	ChannelPrefix = "channel-"
-)
-
-// FormatChannelIdentifier returns the channel identifier with the sequence appended.
-// This is a SDK specific format not enforced by IBC protocol.
-func FormatChannelIdentifier(sequence uint64) string {
-	return fmt.Sprintf("%s%d", ChannelPrefix, sequence)
+	static let channelPrefix = "channel-"
 }
 
-// IsChannelIDFormat checks if a channelID is in the format required on the SDK for
-// parsing channel identifiers. The channel identifier must be in the form: `channel-{N}
-var IsChannelIDFormat = regexp.MustCompile(`^channel-[0-9]{1,20}$`).MatchString
+extension ChannelKeys {
+    // FormatChannelIdentifier returns the channel identifier with the sequence appended.
+    // This is a SDK specific format not enforced by IBC protocol.
+    static func formatChannelIdentifier(sequence: UInt64) -> String {
+        "\(channelPrefix)\(sequence)"
+    }
 
-// IsValidChannelID checks if a channelID is valid and can be parsed to the channel
-// identifier format.
-func IsValidChannelID(channelID string) bool {
-	_, err := ParseChannelSequence(channelID)
-	return err == nil
+    // IsChannelIDFormat checks if a channelID is in the format required on the SDK for
+    // parsing channel identifiers. The channel identifier must be in the form: `channel-{N}
+    static func isFormatted(channelId: String) -> Bool {
+        channelId.range(of: #"^channel-[0-9]{1,20}$"#, options: .regularExpression) != nil
+    }
+
+    // IsValidChannelID checks if a channelID is valid and can be parsed to the channel
+    // identifier format.
+    static func isValidChannelId(channelId: String) -> Bool {
+        (try? parseChannelSequence(channelId: channelId)) == nil
+    }
+
+    // ParseChannelSequence parses the channel sequence from the channel identifier.
+    public static func parseChannelSequence(channelId: String) throws -> UInt64 {
+        guard isFormatted(channelId: channelId) else {
+            throw CosmosError.wrap(
+                error: HostError.invalidId,
+                description: "channel identifier is not in the format: `channel-{N}`"
+            )
+        }
+
+        do {
+            return try HostKeys.parse(identifier: channelId, prefix: channelPrefix)
+        } catch {
+            throw CosmosError.wrap(
+                error: error,
+                description: "invalid channel identifier"
+            )
+        }
+    }
 }
-
-// ParseChannelSequence parses the channel sequence from the channel identifier.
-func ParseChannelSequence(channelID string) (uint64, error) {
-	if !IsChannelIDFormat(channelID) {
-		return 0, sdkerrors.Wrap(host.ErrInvalidID, "channel identifier is not in the format: `channel-{N}`")
-	}
-
-	sequence, err := host.ParseIdentifier(channelID, ChannelPrefix)
-	if err != nil {
-		return 0, sdkerrors.Wrap(err, "invalid channel identifier")
-	}
-
-	return sequence, nil
-}
-*/

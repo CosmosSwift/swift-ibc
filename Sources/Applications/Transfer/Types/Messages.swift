@@ -1,87 +1,140 @@
-/*
-package types
-
-import (
-	"strings"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	clienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
-	host "github.com/cosmos/ibc-go/modules/core/24-host"
-)
+import Foundation
+import Tendermint
+import Cosmos
+import CosmosProto
+import Client
+import Host
 
 // msg types
-const (
-	TypeMsgTransfer = "transfer"
-)
+extension TransferMessage {
+	static let messageType = "transfer"
+}
 
-// NewMsgTransfer creates a new MsgTransfer instance
-//nolint:interfacer
-func NewMsgTransfer(
-	sourcePort, sourceChannel string,
-	token sdk.Coin, sender sdk.AccAddress, receiver string,
-	timeoutHeight clienttypes.Height, timeoutTimestamp uint64,
-) *MsgTransfer {
-	return &MsgTransfer{
-		SourcePort:       sourcePort,
-		SourceChannel:    sourceChannel,
-		Token:            token,
-		Sender:           sender.String(),
-		Receiver:         receiver,
-		TimeoutHeight:    timeoutHeight,
-		TimeoutTimestamp: timeoutTimestamp,
+struct TransferMessage: Message {
+    public static let metaType: MetaType = Self.metaType(
+        key: "cosmos-sdk/MsgTransfer"
+    )
+
+    let sourcePort: String
+    let sourceChannel: String
+    let token: Coin
+    let sender: AccountAddress
+    let receiver: String
+    let timeoutHeight: Height
+    let timeoutTimestamp: UInt64
+    
+    // NewMsgTransfer creates a new MsgTransfer instance
+    init(
+        sourcePort: String,
+        sourceChannel: String,
+        token: Coin,
+        sender: AccountAddress,
+        receiver: String,
+        timeoutHeight: Height,
+        timeoutTimestamp: UInt64
+    ) {
+        self.sourcePort = sourcePort
+        self.sourceChannel = sourceChannel
+        self.token = token
+        self.sender = sender
+        self.receiver = receiver
+        self.timeoutHeight = timeoutHeight
+        self.timeoutTimestamp = timeoutTimestamp
+    }
+}
+
+extension TransferMessage {
+    init(_ transferMessage: Ibc_Applications_Transfer_V1_MsgTransfer) throws {
+        self.sourcePort = transferMessage.sourcePort
+        self.sourceChannel = transferMessage.sourceChannel
+        self.token = Coin(transferMessage.token)
+        self.sender = try AccountAddress(bech32Encoded: transferMessage.sender)
+        self.receiver = transferMessage.receiver
+        self.timeoutHeight = Height(transferMessage.timeoutHeight)
+        self.timeoutTimestamp = transferMessage.timeoutTimestamp
+    }
+}
+
+extension Ibc_Applications_Transfer_V1_MsgTransfer {
+    init(_ transferMessage: TransferMessage) {
+		self.init()
+        self.sourcePort = transferMessage.sourcePort
+        self.sourceChannel = transferMessage.sourceChannel
+        self.token = Cosmos_Base_V1beta1_Coin(transferMessage.token)
+        // TODO: Check if this is the right conversion
+        self.sender = transferMessage.sender.description
+        self.receiver = transferMessage.receiver
+        self.timeoutHeight = Ibc_Core_Client_V1_Height(transferMessage.timeoutHeight)
+        self.timeoutTimestamp = transferMessage.timeoutTimestamp
 	}
 }
 
-// Route implements sdk.Msg
-func (MsgTransfer) Route() string {
-	return RouterKey
-}
+extension TransferMessage {
+	// Route implements sdk.Msg
+	public var route: String {
+		TransferKeys.routerKey
+	}
 
-// Type implements sdk.Msg
-func (MsgTransfer) Type() string {
-	return TypeMsgTransfer
-}
+	// Type implements sdk.Msg
+	public var type: String {
+        Self.messageType
+	}
 
-// ValidateBasic performs a basic check of the MsgTransfer fields.
-// NOTE: timeout height or timestamp values can be 0 to disable the timeout.
-// NOTE: The recipient addresses format is not validated as the format defined by
-// the chain is not known to IBC.
-func (msg MsgTransfer) ValidateBasic() error {
-	if err := host.PortIdentifierValidator(msg.SourcePort); err != nil {
-		return sdkerrors.Wrap(err, "invalid source port ID")
-	}
-	if err := host.ChannelIdentifierValidator(msg.SourceChannel); err != nil {
-		return sdkerrors.Wrap(err, "invalid source channel ID")
-	}
-	if !msg.Token.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Token.String())
-	}
-	if !msg.Token.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, msg.Token.String())
-	}
-	// NOTE: sender format must be validated as it is required by the GetSigners function.
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "string could not be parsed as address: %v", err)
-	}
-	if strings.TrimSpace(msg.Receiver) == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
-	}
-	return ValidateIBCDenom(msg.Token.Denom)
-}
+	// ValidateBasic performs a basic check of the MsgTransfer fields.
+	// NOTE: timeout height or timestamp values can be 0 to disable the timeout.
+	// NOTE: The recipient addresses format is not validated as the format defined by
+	// the chain is not known to IBC.
+	public func validateBasic() throws {
+        do {
+            try Host.portIdentifierValidator(id: sourcePort)
+        } catch {
+            throw CosmosError.wrap(
+                error: error,
+                description: "invalid source port ID"
+            )
+		}
+        
+        do {
+            try Host.channelIdentifierValidator(id: sourceChannel)
+        } catch {
+			throw CosmosError.wrap(
+                error: error,
+                description: "invalid source channel ID"
+            )
+		}
+        
+		guard token.isValid else {
+			throw CosmosError.wrap(
+                error: CosmosError.invalidCoins,
+                description: token.description
+            )
+		}
+        
+//      Token is always positive since we're using UInt
+//		guard token.isPositive else {
+//			throw CosmosError.wrap(
+//                error: CosmosError.insufficientFunds,
+//                description: token.description
+//            )
+//		}
 
-// GetSignBytes implements sdk.Msg.
-func (msg MsgTransfer) GetSignBytes() []byte {
-	return sdk.MustSortJSON(AminoCdc.MustMarshalJSON(&msg))
-}
-
-// GetSigners implements sdk.Msg
-func (msg MsgTransfer) GetSigners() []sdk.AccAddress {
-	valAddr, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
+        guard !receiver.trimmingCharacters(in: .whitespaces).isEmpty else {
+			throw CosmosError.wrap(
+                error: CosmosError.invalidAddress,
+                description: "missing recipient address"
+            )
+		}
+        
+        return try DenominationTrace.validate(ibcDenomination: token.denomination)
 	}
-	return []sdk.AccAddress{valAddr}
+
+	// GetSignBytes implements sdk.Msg.
+	public var signedData: Data {
+        try! JSONEncoder().encode(self)
+	}
+
+	// GetSigners implements sdk.Msg
+	public var signers: [AccountAddress] {
+		return [sender]
+	}
 }
-*/
