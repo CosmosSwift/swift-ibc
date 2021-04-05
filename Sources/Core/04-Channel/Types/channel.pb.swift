@@ -1,9 +1,3 @@
-/*
-
-TODO: substitute with the relevant proto generated file
-
-*/
-
 import Foundation
 import Cosmos
 import CosmosProto

@@ -17,6 +17,7 @@ public enum HostKeys {
 	static let querierRoute = moduleName
 
 	// RouterKey is the msg router key for the IBC module
+
 	static let routerKey = moduleName
 }
 
@@ -226,7 +227,6 @@ extension HostKeys {
 //func sequencePath(sequence uint64) string {
 //	return fmt.Sprintf("%s/%d", KeySequencePrefix, sequence)
 //}
-
 // ICS05
 // The following paths are the keys to the store as defined in https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#store-paths
 

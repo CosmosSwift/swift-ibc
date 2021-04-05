@@ -1,3 +1,17 @@
+
+import Cosmos
+
+fileprivate let subModuleName = "commitment"
+
+extension CosmosError {
+    
+    // IBC port sentinel errors
+    static let invalidProof = register(codespace: subModuleName, code: 2, description: "invalid proof")
+    static let invalidPrefix = register(codespace: subModuleName, code: 3, description: "invalid prefix")
+    static let invalidMerkleProof = register(codespace: subModuleName, code: 4, description: "invalid merkle proof")
+
+}
+
 /*
 package types
 
