@@ -81,7 +81,9 @@ let package = Package(
         ),
         .target(
             name: "Commitment",
-            dependencies: [],
+            dependencies: [
+                .product(name: "Cosmos", package: "swift-cosmos"),
+            ],
             path: "./Sources/Core/23-Commitment"
         ),
         .target(
