@@ -23,7 +23,7 @@ let package = Package(
         .library(name: "LCLocalhost", targets: ["LCLocalhost"]),
     ],
     dependencies: [
-        .package(name: "swift-cosmos", url: "https://github.com/CosmosSwift/swift-cosmos", .branch("feature/ibc")),
+        .package(name: "swift-cosmos", url: "https://github.com/CosmosSwift/swift-cosmos", .branch("main")),
     ],
     targets: [
         .target(
