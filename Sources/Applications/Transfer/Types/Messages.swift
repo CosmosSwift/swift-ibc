@@ -129,7 +129,7 @@ extension TransferMessage {
 	}
 
 	// GetSignBytes implements sdk.Msg.
-	public var signedData: Data {
+	public var toSign: Data {
         try! JSONEncoder().encode(self)
 	}
 

@@ -24,6 +24,7 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "swift-cosmos", url: "https://github.com/CosmosSwift/swift-cosmos", .branch("main")),
+        .package(name: "ABCI", url: "https://github.com/CosmosSwift/swift-abci", .branch("main")),
     ],
     targets: [
         .target(
