@@ -37,7 +37,12 @@ let package = Package(
                 .product(name: "Bank", package: "swift-cosmos"),
                 .product(name: "Capability", package: "swift-cosmos"),
             ],
-            path: "./Sources/Applications/Transfer"
+            path: "./Sources/Applications/Transfer",
+            exclude: [
+                "Keeper/model_based_tests",
+                "Keeper/relay_model",
+                "Keeper/MBT_README.md"
+            ]
         ),
         .target(
             name: "IBCCore",
