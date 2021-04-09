@@ -399,7 +399,7 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 
 		// NOTE: acknowledgement will be written synchronously during IBC handler execution.
 		let result = Result(
-            events: request.eventManager.events // .toABCI()
+            events: request.eventManager.events // .toABCIEvents()
 		)
 
 		return (result, acknowledgement.data)
@@ -409,70 +409,76 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 	public func onAcknowledgementPacket(
 		request: Request,
 		packet: Packet,
-		acknowledgement: Data
+		acknowledgement data: Data
 	) throws -> Result {
-        // TODO: Implement
-        fatalError()
-//		let acknowledgement: Acknowledgement
-//
-//		do {
-//			acknowledgement = try JSONDecoder().decode(Acknowledgement.self, from: acknowledgement)
-//		} catch {
-//			throw sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
-//		}
-//
-//		let data: FungibleTokenPacketData
-//
-//		do {
-//			data = try JSONDecoder().decode(FungibleTokenPacketData.self, from: packet.data)
-//		} catch {
-//			throw sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
-//		}
-//
-//		try keeper.onAcknowledgementPacket(
-//			request: request,
-//			packet: packet,
-//			data: data,
-//			acknowledgement: acknowledgement
-//		)
-//
-//		let event = Event(
-//			type: .packet,
-//			attributes: [
-//				Attribute(sdk.AttributeKeyModule, types.ModuleName),
-//				Attribute(types.AttributeKeyReceiver, data.Receiver),
-//				Attribute(types.AttributeKeyDenom, data.Denom),
-//				Attribute(types.AttributeKeyAmount, fmt.Sprintf("%d", data.Amount)),
-//				Attribute(types.AttributeKeyAck, ack.String()),
-//			]
-//		)
-//
-//		request.eventManager.emitEvent(event: event)
-//
-//		switch acknowledgement.response {
-//			case let response as Acknowledgement_Result:
-//                let event = Event(
-//					type: .packet,
-//					attributes: [
-//						Attribute(types.AttributeKeyAckSuccess, string(response.result)),
-//					]
-//				)
-//
-//				request.eventManager.emitEvent(event: event)
-//			case is Acknowledgement_Error:
-//				let event = Event(
-//					type: .packet,
-//					attributes: [
-//						Attribute(types.AttributeKeyAckError, response.error),
-//					]
-//				)
-//
-//				request.eventManager.emitEvent(event: event)
-//		}
-//
-//		return Result(
-//			events: request.eventManager.events.toABCIEvents()
-//		)
+		let acknowledgement: Acknowledgement
+
+		do {
+            acknowledgement = try Codec.transferCodec.unmarshalJSON(data: data)
+		} catch {
+            throw CosmosError.wrap(
+                error: CosmosError.unknownRequest,
+                description: "cannot unmarshal ICS-20 transfer packet acknowledgement: \(error)"
+            )
+		}
+
+		let data: FungibleTokenPacketData
+
+		do {
+            data = try Codec.transferCodec.unmarshalJSON(data: packet.data)
+		} catch {
+            throw CosmosError.wrap(
+                error: CosmosError.unknownRequest,
+                description: "cannot unmarshal ICS-20 transfer packet data: \(error)"
+			)
+		}
+
+		try keeper.onAcknowledgementPacket(
+			request: request,
+			packet: packet,
+			data: data,
+			acknowledgement: acknowledgement
+		)
+
+		let event = Event(
+			type: TransferEventType.packet,
+			attributes: [
+                Attribute(key: AttributeKey.module, value: TransferKeys.moduleName),
+                Attribute(key: TransferAttributeKey.receiver, value: data.receiver),
+                Attribute(key: TransferAttributeKey.denomination, value: data.denomination),
+                Attribute(key: TransferAttributeKey.amount, value: "\(data.amount)"),
+                // TODO: Maybe we need to implement CustomStringConvertible on the Acknowledgement type
+                // so that we have some specific string representation
+                Attribute(key: TransferAttributeKey.acknowledgement, value: "\(acknowledgement)"),
+			]
+		)
+
+		request.eventManager.emit(event: event)
+
+		switch acknowledgement.response {
+        case .result(let result):
+                let event = Event(
+					type: TransferEventType.packet,
+					attributes: [
+                        Attribute(key: TransferAttributeKey.acknowledgementSuccess, value: "\(result)"),
+					]
+				)
+
+				request.eventManager.emit(event: event)
+        case .error(let error):
+				let event = Event(
+					type: TransferEventType.packet,
+					attributes: [
+                        Attribute(key: TransferAttributeKey.acknowledgementError, value: error),
+					]
+				)
+
+				request.eventManager.emit(event: event)
+		}
+
+		return Result(
+			events: request.eventManager.events // .toABCIEvents()
+		)
 	}
 
 	// OnTimeoutPacket implements the IBCModule interface
@@ -480,37 +486,38 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 		request: Request,
 		packet: Packet
 	) throws -> Result {
-        // TODO: Implement
-        fatalError()
-//		let data: FungibleTokenPacketData
-//
-//		do {
-//			data = try JSONDecoder().decode(FungibleTokenPacketData.self, from: packet.data)
-//		} catch {
-//			throw sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
-//		}
-//
-//		// refund tokens
-//		try keeper.onTimeoutPacket(
-//			request: request,
-//			packet: packet,
-//			data: data
-//		)
-//
-//		let event = Event(
-//			type: .timeout,
-//			attributes: [
-//				Attribute(sdk.AttributeKeyModule, types.ModuleName),
-//				Attribute(types.AttributeKeyRefundReceiver, data.Sender),
-//				Attribute(types.AttributeKeyRefundDenom, data.Denom),
-//				Attribute(types.AttributeKeyRefundAmount, fmt.Sprintf("%d", data.Amount)),
-//			]
-//		)
-//
-//		request.eventManager.emitEvent(event: event)
-//
-//		return Result(
-//			events: request.eventManager.events.toABCIEvents()
-//		)
+		let data: FungibleTokenPacketData
+
+		do {
+            data = try Codec.transferCodec.unmarshalJSON(data: packet.data)
+		} catch {
+            throw CosmosError.wrap(
+                error: CosmosError.unknownRequest,
+                description: "cannot unmarshal ICS-20 transfer packet data: \(error)"
+            )
+		}
+
+		// refund tokens
+		try keeper.onTimeoutPacket(
+			request: request,
+			packet: packet,
+			data: data
+		)
+
+		let event = Event(
+			type: TransferEventType.timeout,
+			attributes: [
+                Attribute(key: AttributeKey.module, value: TransferKeys.moduleName),
+                Attribute(key: TransferAttributeKey.refundReceiver, value: data.sender),
+                Attribute(key: TransferAttributeKey.refundDenomination, value: data.denomination),
+                Attribute(key: TransferAttributeKey.refundAmount, value: "\(data.amount)"),
+			]
+		)
+
+		request.eventManager.emit(event: event)
+
+		return Result(
+			events: request.eventManager.events // .toABCIEvents()
+		)
 	}
 }

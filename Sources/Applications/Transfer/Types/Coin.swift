@@ -1,15 +1,22 @@
 import Cosmos
 
 extension TransferKeeper {
-//// SenderChainIsSource returns false if the denomination originally came
-//// from the receiving chain and true otherwise.
-//func SenderChainIsSource(sourcePort, sourceChannel, denom string) bool {
-//	// This is the prefix that would have been prefixed to the denomination
-//	// on sender chain IF and only if the token originally came from the
-//	// receiving chain.
-//
-//	return !ReceiverChainIsSource(sourcePort, sourceChannel, denom)
-//}
+    // SenderChainIsSource returns false if the denomination originally came
+    // from the receiving chain and true otherwise.
+    func isSenderChainSource(
+        sourcePort: String,
+        sourceChannel: String,
+        denomination: String
+    ) -> Bool {
+        // This is the prefix that would have been prefixed to the denomination
+        // on sender chain IF and only if the token originally came from the
+        // receiving chain.
+        return !isReceiverChainSource(
+            sourcePort: sourcePort,
+            sourceChannel: sourceChannel,
+            denomination: denomination
+        )
+    }
 
     // ReceiverChainIsSource returns true if the denomination originally came
     // from the receiving chain and false otherwise.

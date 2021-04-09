@@ -122,7 +122,7 @@ public struct Acknowledgement: Codable {
     // Types that are valid to be assigned to Response:
     //    *Acknowledgement_Result
     //    *Acknowledgement_Error
-    let response: AcknowledgementResponse
+    public let response: AcknowledgementResponse
 }
 
 extension Acknowledgement {

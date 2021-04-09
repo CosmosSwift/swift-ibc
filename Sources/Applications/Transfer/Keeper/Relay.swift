@@ -337,73 +337,107 @@ extension TransferKeeper {
 //        }
     }
 
-//// OnAcknowledgementPacket responds to the the success or failure of a packet
-//// acknowledgement written on the receiving chain. If the acknowledgement
-//// was a success then nothing occurs. If the acknowledgement failed, then
-//// the sender is refunded their tokens using the refundPacketToken function.
-//func (k Keeper) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData, ack channeltypes.Acknowledgement) error {
-//	switch ack.Response.(type) {
-//	case *channeltypes.Acknowledgement_Error:
-//		return k.refundPacketToken(ctx, packet, data)
-//	default:
-//		// the acknowledgement succeeded on the receiving chain so nothing
-//		// needs to be executed and no error needs to be returned
-//		return nil
-//	}
-//}
-//
-//// OnTimeoutPacket refunds the sender since the original packet sent was
-//// never received and has been timed out.
-//func (k Keeper) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
-//	return k.refundPacketToken(ctx, packet, data)
-//}
-//
-//// refundPacketToken will unescrow and send back the tokens back to sender
-//// if the sending chain was the source chain. Otherwise, the sent tokens
-//// were burnt in the original send so new tokens are minted and sent to
-//// the sending address.
-//func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data types.FungibleTokenPacketData) error {
-//	// NOTE: packet data type already checked in handler.go
-//
-//	// parse the denomination from the full denom path
-//	trace := types.ParseDenomTrace(data.Denom)
-//
-//	token := sdk.NewCoin(trace.IBCDenom(), sdk.NewIntFromUint64(data.Amount))
-//
-//	// decode the sender address
-//	sender, err := sdk.AccAddressFromBech32(data.Sender)
-//	if err != nil {
-//		return err
-//	}
-//
-//	if types.SenderChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
-//		// unescrow tokens back to sender
-//		escrowAddress := types.GetEscrowAddress(packet.GetSourcePort(), packet.GetSourceChannel())
-//		if err := k.bankKeeper.SendCoins(ctx, escrowAddress, sender, sdk.NewCoins(token)); err != nil {
-//			// NOTE: this error is only expected to occur given an unexpected bug or a malicious
-//			// counterparty module. The bug may occur in bank or any part of the code that allows
-//			// the escrow address to be drained. A malicious counterparty module could drain the
-//			// escrow address by allowing more tokens to be sent back then were escrowed.
-//			return sdkerrors.Wrap(err, "unable to unescrow tokens, this may be caused by a malicious counterparty module or a bug: please open an issue on counterparty module")
-//		}
-//
-//		return nil
-//	}
-//
-//	// mint vouchers back to sender
-//	if err := k.bankKeeper.MintCoins(
-//		ctx, types.ModuleName, sdk.NewCoins(token),
-//	); err != nil {
-//		return err
-//	}
-//
-//	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(token)); err != nil {
-//		panic(fmt.Sprintf("unable to send coins from module to account despite previously minting coins to module account: %v", err))
-//	}
-//
-//	return nil
-//}
-//
+    // OnAcknowledgementPacket responds to the the success or failure of a packet
+    // acknowledgement written on the receiving chain. If the acknowledgement
+    // was a success then nothing occurs. If the acknowledgement failed, then
+    // the sender is refunded their tokens using the refundPacketToken function.
+    func onAcknowledgementPacket(
+        request: Request,
+        packet: Packet,
+        data: FungibleTokenPacketData,
+        acknowledgement: Acknowledgement
+    ) throws {
+        switch acknowledgement.response {
+        case .error(let error):
+            try refundPacketToken(request: request, packet: packet, data: data)
+        default:
+            // the acknowledgement succeeded on the receiving chain so nothing
+            // needs to be executed and no error needs to be returned
+            return
+        }
+    }
+
+    // OnTimeoutPacket refunds the sender since the original packet sent was
+    // never received and has been timed out.
+    func onTimeoutPacket(
+        request: Request,
+        packet: Packet,
+        data: FungibleTokenPacketData
+    ) throws {
+        try refundPacketToken(
+            request: request,
+            packet: packet,
+            data: data
+        )
+    }
+
+    // refundPacketToken will unescrow and send back the tokens back to sender
+    // if the sending chain was the source chain. Otherwise, the sent tokens
+    // were burnt in the original send so new tokens are minted and sent to
+    // the sending address.
+    private func refundPacketToken(
+        request: Request,
+        packet: Packet,
+        data: FungibleTokenPacketData
+    ) throws {
+        // NOTE: packet data type already checked in handler.go
+
+        // parse the denomination from the full denom path
+        let trace = DenominationTrace(rawDenomination: data.denomination)
+        let token = Coin(denomination: trace.ibcDenomination, amount: UInt(data.amount))
+
+        // decode the sender address
+        let sender = try AccountAddress(bech32Encoded: data.sender)
+
+        if isSenderChainSource(
+            sourcePort: packet.sourcePort,
+            sourceChannel: packet.sourceChannel,
+            denomination: data.denomination
+        ) {
+            // unescrow tokens back to sender
+            let escrowAddress = TransferKeys.escrowAddress(
+                portId: packet.sourcePort,
+                channelId: packet.sourceChannel
+            )
+            
+            do {
+                try bankKeeper.sendCoins(
+                    request: request,
+                    from: escrowAddress,
+                    to: sender,
+                    amount: Coins(token)
+                )
+            } catch {
+                // NOTE: this error is only expected to occur given an unexpected bug or a malicious
+                // counterparty module. The bug may occur in bank or any part of the code that allows
+                // the escrow address to be drained. A malicious counterparty module could drain the
+                // escrow address by allowing more tokens to be sent back then were escrowed.
+                throw CosmosError.wrap(
+                    error: error,
+                    description: "unable to unescrow tokens, this may be caused by a malicious counterparty module or a bug: please open an issue on counterparty module"
+                )
+            }
+        }
+
+        // mint vouchers back to sender
+        try bankKeeper.mintCoins(
+            request: request,
+            moduleName: TransferKeys.moduleName,
+            amount: Coins(token)
+        )
+
+        do {
+            try bankKeeper.sendCoinsFromModuleToAccount(
+                request: request,
+                senderModule: TransferKeys.moduleName,
+                recipientAddress: sender,
+                amount: Coins(token)
+            )
+        } catch {
+            fatalError("unable to send coins from module to account despite previously minting coins to module account: \(error)")
+        }
+    }
+
 //// DenomPathFromHash returns the full denomination path prefix from an ibc denom with a hash
 //// component.
 //func (k Keeper) DenomPathFromHash(ctx sdk.Context, denom string) (string, error) {
