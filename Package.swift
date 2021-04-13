@@ -24,6 +24,7 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "swift-cosmos", url: "https://github.com/CosmosSwift/swift-cosmos", .branch("main")),
+        .package(name: "swift-nio", url: "https://github.com/apple/swift-nio", .upToNextMajor(from: "2.26.0")),
     ],
     targets: [
         .target(
@@ -72,6 +73,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Cosmos", package: "swift-cosmos"),
                 .target(name: "Host"),
+                .target(name: "Client"),
             ],
             path: "./Sources/Core/04-Channel"
         ),
