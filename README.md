@@ -1,25 +1,5 @@
 # swift-ibc
 
-The start of porting ibc to Swift
+The repository contains the on going work of porting IBC to Swift. It's short term aim is to follow the Go implementation as found here: https://github.com/cosmos/ibc-go.
 
-Applications:
-[ ]: Transfer
-
-Core:
-[ ]: 02-Client
-[ ]: 03-Connection
-[ ]: 04-Channel
-[ ]: 05-Port
-[ ]: 23-Commitment
-[x]: 24-Host module
-[ ]: Core
-
-Lightclients
-[ ]: 06-SoloMachine
-[ ]: 07-Tendermint
-[ ]: 09-Localhost
-
-# Tools
-
-`for i in $( ls *.go ); do sed '1 s/^/\/\*\n/' $i > ${i}do; echo \*\/ >> ${i}do; mv -- "$i" "${i%.go}.swift"; done;`
-`for i in $( ls *.godo ); do mv -- "$i" "${i%.godo}.swift"; done`
+So far, the Transfer module and it's dependencies has been implemented. The next steps will be to look at the Light clients and their respective dependencies.
