@@ -23,3 +23,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	commitmenttypes.RegisterInterfaces(registry)
 }
 */
+
+import Cosmos
+
+extension Codec {
+    // ModuleCdc defines the module codec
+    public static let ibc = Codec()
+}

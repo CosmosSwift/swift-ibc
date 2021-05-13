@@ -8,23 +8,23 @@ import Channel
 public protocol IBCModule {
 	func onChannelOpenInit(
 		request: Request,
-		order: Order,
+		ordering: Ordering,
 		connectionHops: [String],
 		portId: String,
 		channelId: String,
 		channelCapability: Capability,
-		counterparty: Counterparty,
+		counterparty: ChannelCounterparty,
 		version: String
 	) throws
 
 	func onChannelOpenTry(
 		request: Request,
-		order: Order,
+		ordering: Ordering,
 		connectionHops: [String],
 		portId: String,
 		channelId: String,
 		channelCapability: Capability,
-		counterparty: Counterparty,
+		counterparty: ChannelCounterparty,
 		version: String,
 		counterpartyVersion: String
 	) throws

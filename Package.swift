@@ -45,8 +45,16 @@ let package = Package(
             ]
         ),
         .target(
+            name: "IBCCoreExported",
+            dependencies: [
+                .product(name: "Cosmos", package: "swift-cosmos"),
+            ],
+            path: "./Sources/Core/Exported"
+        ),
+        .target(
             name: "IBCCore",
             dependencies: [
+                .target(name: "IBCCoreExported"),
                 .target(name: "Client"),
                 .target(name: "Connection"),
                 .target(name: "Channel"),
@@ -60,12 +68,16 @@ let package = Package(
             name: "Client",
             dependencies: [
                 .product(name: "Cosmos", package: "swift-cosmos"),
+                .target(name: "IBCCoreExported"),
             ],
             path: "./Sources/Core/02-Client"
         ),
         .target(
             name: "Connection",
-            dependencies: [],
+            dependencies: [
+                .product(name: "Cosmos", package: "swift-cosmos"),
+                .target(name: "Commitment"),
+            ],
             path: "./Sources/Core/03-Connection"
         ),
         .target(

@@ -1,67 +1,85 @@
-/*
-package types
+//package types
+//
+//import (
+//	"fmt"
+//	"regexp"
+//	"strconv"
+//	"strings"
+//
+//	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+//	host "github.com/cosmos/ibc-go/modules/core/24-host"
+//)
 
-import (
-	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
+import Cosmos
+import Host
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	host "github.com/cosmos/ibc-go/modules/core/24-host"
-)
-
-const (
+public enum ClientKeys {
 	// SubModuleName defines the IBC client name
-	SubModuleName string = "client"
-
-	// RouterKey is the message route for IBC client
-	RouterKey string = SubModuleName
-
-	// QuerierRoute is the querier route for IBC client
-	QuerierRoute string = SubModuleName
-
-	// KeyNextClientSequence is the key used to store the next client sequence in
-	// the keeper.
-	KeyNextClientSequence = "nextClientSequence"
-)
-
-// FormatClientIdentifier returns the client identifier with the sequence appended.
-// This is a SDK specific format not enforced by IBC protocol.
-func FormatClientIdentifier(clientType string, sequence uint64) string {
-	return fmt.Sprintf("%s-%d", clientType, sequence)
+    static let subModuleName = "client"
+//
+//	// RouterKey is the message route for IBC client
+//	RouterKey string = SubModuleName
+//
+//	// QuerierRoute is the querier route for IBC client
+//	QuerierRoute string = SubModuleName
+//
+//	// KeyNextClientSequence is the key used to store the next client sequence in
+//	// the keeper.
+//	KeyNextClientSequence = "nextClientSequence"
 }
 
-// IsClientIDFormat checks if a clientID is in the format required on the SDK for
-// parsing client identifiers. The client identifier must be in the form: `{client-type}-{N}
-var IsClientIDFormat = regexp.MustCompile(`^.*[^-]-[0-9]{1,20}$`).MatchString
+extension ClientKeys {
+    // FormatClientIdentifier returns the client identifier with the sequence appended.
+    // This is a SDK specific format not enforced by IBC protocol.
+    public static func formatClientIdentifier(clientType: String, sequence: UInt64) -> String {
+        "\(clientType)-\(sequence)"
+    }
 
-// IsValidClientID checks if the clientID is valid and can be parsed into the client
-// identifier format.
-func IsValidClientID(clientID string) bool {
-	_, _, err := ParseClientIdentifier(clientID)
-	return err == nil
+    // IsClientIDFormat checks if a clientID is in the format required on the SDK for
+    // parsing client identifiers. The client identifier must be in the form: `{client-type}-{N}
+    static func isClientIdFormat(_ clientId: String) -> Bool {
+        clientId.range(of: #"^.*[^-]-[0-9]{1,20}$"#, options: .regularExpression) != nil
+    }
+
+    // IsValidClientID checks if the clientID is valid and can be parsed into the client
+    // identifier format.
+    public static func isValid(clientId: String) -> Bool {
+        do {
+            _ = try parse(clientIdentifier: clientId)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    // ParseClientIdentifier parses the client type and sequence from the client identifier.
+    static public func parse(clientIdentifier clientId: String) throws -> (String, UInt64) {
+        guard isClientIdFormat(clientId) else {
+            throw CosmosError.wrap(
+                error: HostError.invalidId,
+                description: "invalid client identifier \(clientId) is not in format: `{client-type}-{N}`"
+            )
+        }
+
+        let splitString = clientId.split(separator: "-")
+        let lastIndex = splitString.count - 1
+
+        let clientType = splitString.dropLast().joined(separator: "-")
+        
+        guard !clientType.trimmingCharacters(in: .whitespaces).isEmpty else {
+            throw CosmosError.wrap(
+                error: HostError.invalidId,
+                description: "client identifier must be in format: `{client-type}-{N}` and client type cannot be blank"
+            )
+        }
+
+        guard let sequence = UInt64(splitString[lastIndex]) else {
+            throw CosmosError.wrap(
+                error: HostError.invalidId,
+                description: "failed to parse client identifier sequence"
+            )
+        }
+
+        return (clientType, sequence)
+    }
 }
-
-// ParseClientIdentifier parses the client type and sequence from the client identifier.
-func ParseClientIdentifier(clientID string) (string, uint64, error) {
-	if !IsClientIDFormat(clientID) {
-		return "", 0, sdkerrors.Wrapf(host.ErrInvalidID, "invalid client identifier %s is not in format: `{client-type}-{N}`", clientID)
-	}
-
-	splitStr := strings.Split(clientID, "-")
-	lastIndex := len(splitStr) - 1
-
-	clientType := strings.Join(splitStr[:lastIndex], "-")
-	if strings.TrimSpace(clientType) == "" {
-		return "", 0, sdkerrors.Wrap(host.ErrInvalidID, "client identifier must be in format: `{client-type}-{N}` and client type cannot be blank")
-	}
-
-	sequence, err := strconv.ParseUint(splitStr[lastIndex], 10, 64)
-	if err != nil {
-		return "", 0, sdkerrors.Wrap(err, "failed to parse client identifier sequence")
-	}
-
-	return clientType, sequence, nil
-}
-*/

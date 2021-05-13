@@ -3,26 +3,127 @@ import Cosmos
 import CosmosProto
 import Client
 
-public enum Order: Int {
+// IdentifiedChannel defines a channel with additional port and channel
+// identifier fields.
+struct IdentifiedChannel: Codable {
+    // current state of the channel end
+    let state: ChannelState
+    // whether the channel is ordered or unordered
+    let ordering: Ordering
+    // counterparty channel end
+    let counterparty: ChannelCounterparty
+    // list of connection identifiers, in order, along which packets sent on
+    // this channel will travel
+    let connectionHops: [String]
+    // opaque channel version, which is agreed upon during the handshake
+    let version: String
+    // port identifier
+    let portId: String
+    // channel identifier
+    let channelId: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case state
+        case ordering
+        case counterparty
+        case connectionHops = "connection_hops"
+        case version
+        case portId = "port_id"
+        case channelId = "channel_id"
+    }
+}
+
+extension IdentifiedChannel {
+    init(_ channel: Ibc_Core_Channel_V1_IdentifiedChannel) {
+        self.state = ChannelState(channel.state)
+        self.ordering = Ordering(channel.ordering)
+        self.counterparty = ChannelCounterparty(channel.counterparty)
+        self.connectionHops = channel.connectionHops
+        self.version = channel.version
+        self.portId = channel.portID
+        self.channelId = channel.portID
+    }
+}
+
+// State defines if a channel is in one of the following states:
+// CLOSED, INIT, TRYOPEN, OPEN or UNINITIALIZED.
+public enum ChannelState: Int, Codable {
+    // Default State
+    case unitinialized = 0
+    // A channel has just started the opening handshake.
+    case initialized = 1
+    // A channel has acknowledged the handshake step on the counterparty chain.
+    case tryOpen = 2
+    // A channel has completed the handshake. Open channels are
+    // ready to send and receive packets.
+    case open = 3
+    // A channel has been closed and can no longer be used to send or receive
+    // packets.
+    case closed = 4
+}
+
+extension ChannelState {
+    init(_ state: Ibc_Core_Channel_V1_State) {
+        self.init(rawValue: state.rawValue)!
+    }
+}
+
+// Order defines if a channel is ORDERED or UNORDERED
+public enum Ordering: Int, Codable {
+    // zero-value for channel ordering
     case none = 0
+    // packets can be delivered in any order, which may differ from the order in
+    // which they were sent.
     case unordered = 1
+    // packets are delivered exactly in the order which they were sent
     case ordered = 2
 }
 
-extension Order {
-    init(_ order: Ibc_Core_Channel_V1_Order) {
-        self.init(rawValue: order.rawValue)!
+extension Ordering {
+    init(_ ordering: Ibc_Core_Channel_V1_Order) {
+        self.init(rawValue: ordering.rawValue)!
     }
 }
 
 extension Ibc_Core_Channel_V1_Order {
-    init(_ order: Order) {
-        self.init(rawValue: order.rawValue)!
+    init(_ ordering: Ordering) {
+        self.init(rawValue: ordering.rawValue)!
+    }
+}
+
+// PacketState defines the generic type necessary to retrieve and store
+// packet commitments, acknowledgements, and receipts.
+// Caller is responsible for knowing the context necessary to interpret this
+// state as a commitment, acknowledgement, or a receipt.
+struct PacketState: Codable {
+    // channel port identifier.
+    let portId: String
+    // channel unique identifier.
+    let channelId: String
+    // packet sequence.
+    let sequence: UInt64
+    // embedded data that represents packet state.
+    let data: Data
+    
+    private enum CodingKeys: String, CodingKey {
+        case portId = "port_id"
+        case channelId = "channel_id"
+        case sequence
+        case data
+    }
+}
+
+extension PacketState {
+    init(_ state: Ibc_Core_Channel_V1_PacketState) {
+        self.portId = state.portID
+        self.channelId = state.channelID
+        self.sequence = state.sequence
+        self.data = state.data
     }
 }
 
 // Counterparty defines a channel end counterparty
-public struct Counterparty: Codable {
+public struct ChannelCounterparty: Codable {
     // port on the counterparty chain which owns the other end of the channel.
     let portId: String
     // channel end on the counterparty chain
@@ -34,7 +135,7 @@ public struct Counterparty: Codable {
     }
 }
 
-extension Counterparty {
+extension ChannelCounterparty {
     init(_ counterparty: Ibc_Core_Channel_V1_Counterparty) {
         self.portId = counterparty.portID
         self.channelId = counterparty.channelID
@@ -42,7 +143,7 @@ extension Counterparty {
 }
 
 extension Ibc_Core_Channel_V1_Counterparty {
-    init(_ counterparty: Counterparty) {
+    init(_ counterparty: ChannelCounterparty) {
         self.init()
         self.portID = counterparty.portId
         self.channelID = counterparty.channelId

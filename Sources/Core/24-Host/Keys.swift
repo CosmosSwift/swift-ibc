@@ -8,7 +8,7 @@
 
 public enum HostKeys {
 	// ModuleName is the name of the IBC module
-    static let moduleName = "ibc"
+    public static let moduleName = "ibc"
 
 	// StoreKey is the string store representation
 	static let storeKey = moduleName

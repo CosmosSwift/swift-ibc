@@ -62,13 +62,17 @@ extension Host {
         }
     }
 
-    //// ClientIdentifierValidator is the default validator function for Client identifiers.
-    //// A valid Identifier must be between 9-64 characters and only contain alphanumeric and some allowed
-    //// special characters (see IsValidID).
-    //func ClientIdentifierValidator(id string) error {
-    //	return defaultIdentifierValidator(id, 9, DefaultMaxCharacterLength)
-    //}
-    //
+    // ClientIdentifierValidator is the default validator function for Client identifiers.
+    // A valid Identifier must be between 9-64 characters and only contain alphanumeric and some allowed
+    // special characters (see IsValidID).
+    public static func clientIdentifierValidator(id: String) throws {
+    	try defaultIdentifierValidator(
+            id: id,
+            min: 9,
+            max: defaultMaxCharacterLength
+        )
+    }
+    
     //// ConnectionIdentifierValidator is the default validator function for Connection identifiers.
     //// A valid Identifier must be between 10-64 characters and only contain alphanumeric and some allowed
     //// special characters (see IsValidID).
@@ -90,7 +94,7 @@ extension Host {
     // PortIdentifierValidator is the default validator function for Port identifiers.
     // A valid Identifier must be between 2-64 characters and only contain alphanumeric and some allowed
     // special characters (see IsValidID).
-public static func portIdentifierValidator(id: String) throws {
+    public static func portIdentifierValidator(id: String) throws {
         try defaultIdentifierValidator(
             id: id,
             min: 2,

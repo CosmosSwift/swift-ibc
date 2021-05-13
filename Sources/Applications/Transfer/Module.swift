@@ -194,7 +194,7 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 	func validateTransferChannelParams(
 		request: Request,
 		keeper: TransferKeeper,
-		order: Order,
+		ordering: Ordering,
 		portId: String,
 		channelId: String,
 		version: String
@@ -210,10 +210,10 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
             )
 		}
 
-		guard order == .unordered else {
+		guard ordering == .unordered else {
             throw CosmosError.wrap(
                 error: ChannelError.invalidChannelOrdering,
-                description: "expected \(Order.unordered) channel, got \(order) "
+                description: "expected \(Ordering.unordered) channel, got \(ordering) "
             )
 		}
 
@@ -238,18 +238,18 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 	// OnChanOpenInit implements the IBCModule interface
 	public func onChannelOpenInit(
 		request: Request,
-		order: Order,
+		ordering: Ordering,
 		connectionHops: [String],
 		portId: String,
 		channelId: String,
 		channelCapability: Capability,
-        counterparty: Counterparty,
+        counterparty: ChannelCounterparty,
 		version: String
 	) throws {
 		try validateTransferChannelParams(
 			request: request,
 			keeper: keeper,
-			order: order,
+			ordering: ordering,
 			portId: portId,
 			channelId: channelId,
 			version: version
@@ -266,19 +266,19 @@ public final class TransferAppModule: TransferAppModuleBasic, AppModule, IBCModu
 	// OnChanOpenTry implements the IBCModule interface
 	public func onChannelOpenTry(
 		request: Request,
-		order: Order,
+		ordering: Ordering,
 		connectionHops: [String],
         portId: String,
         channelId: String,
 		channelCapability: Capability,
-		counterparty: Counterparty,
+		counterparty: ChannelCounterparty,
 		version: String,
 		counterpartyVersion: String
 	) throws {
 		try validateTransferChannelParams(
 			request: request,
 			keeper: keeper,
-			order: order,
+			ordering: ordering,
 			portId: portId,
 			channelId: channelId,
 			version: version
